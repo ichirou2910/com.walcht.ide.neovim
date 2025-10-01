@@ -359,21 +359,11 @@ fi
 
       // send request to Neovim server instance listening on the provided socket path to
       // open a tab/buffer corresponding to the provided filepath
-      if (!ProcessUtils.RunProcess(app, $"--server {m_ServerSocketPath} --remote-tab {filePath}",
+      if (!ProcessUtils.RunProcess(app, $"--server {m_ServerSocketPath} --remote-send \':e {filePath}<CR>:call cursor({line},{column})<CR>\'",
             ProcessWindowStyle.Hidden, createNoWindow: true))
       {
         Debug.LogError($"[neovim.ide] failed at sending a request to Neovim server instance to open file.");
         return false;
-      }
-
-
-      // you cannot do both --remote-tab and --remote-send at the same time (I have no idea why.
-      // You can do them together in a terminal but not through C# :-|).
-      if (!ProcessUtils.RunProcess(app, $"--server {m_ServerSocketPath} --remote-send \':call cursor({line},{column})<CR>\'",
-            ProcessWindowStyle.Hidden, createNoWindow: true))
-      {
-        // it's fine if we fail here - we are just jumping to a line and cursor position
-        Debug.LogWarning($"[neovim.ide] failed at sending request to jump to cursor position.");
       }
 
       // optionally focus on Neovim - this is extremely tricky to implement across platform
