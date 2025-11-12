@@ -321,6 +321,11 @@ fi
       m_Generator.Sync();
     }
 
+    private static bool IsSupportedPath(string path)
+    {
+        var extensionWithoutDot = Path.GetExtension(path).TrimStart('.').ToLower();
+        return extensionWithoutDot == "cs" || extensionWithoutDot == "shader";
+    }
 
     // The external code editor needs to handle the request to open a file.
     public bool OpenProject(string filePath = "", int line = -1, int column = -1)
@@ -328,6 +333,9 @@ fi
       if (filePath != "" && !File.Exists(filePath)) return false;
       if (line == -1) line = 1;
       if (column == -1) column = 0;
+
+      if (!IsSupportedPath(filePath))
+        return false;
 
       string app = EditorPrefs.GetString("kScriptsDefaultApp");
 
@@ -399,7 +407,12 @@ fi
           break;
         case LinuxDesktopEnvironment.KDE:
           {
-            // TODO: add support for switching focus to Neovim on KDE Wayland
+            string cmd = @"qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.activateWindow \"nvimunity\"";
+            if (!ProcessUtils.RunShellCmd(cmd))
+            {
+              Debug.LogWarning($"[neovim.ide] failed to focus on Neovim server instance titled 'nvimunity'.\n"
+                  + $"Failed to execute the cmd: '{cmd}'");
+            }
           }
           break;
         default:
